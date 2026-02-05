@@ -16,11 +16,16 @@ app = FastAPI(
 
 # --- 2. CORS Configuration ---
 # Allow requests from the frontend (which will be running on a different port)
-origins = [
+# Supports comma-separated overrides via CORS_ORIGINS env var.
+default_origins = [
     "http://localhost:3000",
-    "http://localhost:5174", # Default Vite port
-    "http://127.0.0.1:5174",
+    "http://localhost:5173",  # Default Vite port
+    "http://127.0.0.1:5173",
+    "https://surge-pricing-dashboard-frontend.vercel.app",
 ]
+
+origins_env = os.getenv("CORS_ORIGINS")
+origins = [o.strip() for o in origins_env.split(",")] if origins_env else default_origins
 
 app.add_middleware(
     CORSMiddleware,
