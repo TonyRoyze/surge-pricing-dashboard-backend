@@ -1,9 +1,4 @@
-fastapi
-uvicorn[standard]
+fastapi==0.116.1
 scikit-learn==1.7.2
-pandas
-pydantic
-joblib
-python-multipart
-numpy
-catboost
+pandas==2.3.1
+# catboost==1.2.8

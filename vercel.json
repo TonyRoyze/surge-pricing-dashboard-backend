@@ -3,6 +3,11 @@
   "builds": [
     { "src": "main.py", "use": "@vercel/python" }
   ],
+  "functions": {
+    "main.py": {
+      "excludeFiles": "{README.md,vercel.json,__pycache__/**,model/**/*.ipynb,model/**/*.csv}"
+    }
+  },
   "routes": [
     { "src": "/(.*)", "dest": "main.py" }
   ]
