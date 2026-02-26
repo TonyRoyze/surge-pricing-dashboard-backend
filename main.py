@@ -46,10 +46,8 @@ PROFIT_FEATURE_COLUMNS = [
 
 # --- 3. Model Loading ---
 # Load the selected SHAP-based model once at startup
-model_path = os.path.join(os.path.dirname(__file__), "model", "exp6_shap_features.pkl")
-profit_model_path = os.path.join(
-    os.path.dirname(__file__), "model", "exp8_profit_percentage_shap_features.pkl"
-)
+model_path = os.path.join(os.path.dirname(__file__), "model", "exp1.6_shap_features.pkl")
+profit_model_path = os.path.join(os.path.dirname(__file__), "model", "exp2.6_shap_features.pkl")
 
 try:
     model = joblib.load(model_path)
