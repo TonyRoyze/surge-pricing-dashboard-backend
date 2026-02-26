@@ -39,10 +39,17 @@ SHAP_FEATURE_COLUMNS = [
     "Number_of_Drivers",
     "Expected_Ride_Duration",
 ]
+PROFIT_FEATURE_COLUMNS = [
+    "Number_of_Riders",
+    "Number_of_Drivers",
+]
 
 # --- 3. Model Loading ---
 # Load the selected SHAP-based model once at startup
 model_path = os.path.join(os.path.dirname(__file__), "model", "exp6_shap_features.pkl")
+profit_model_path = os.path.join(
+    os.path.dirname(__file__), "model", "exp8_profit_percentage_shap_features.pkl"
+)
 
 try:
     model = joblib.load(model_path)
@@ -53,6 +60,16 @@ except FileNotFoundError:
 except Exception as exc:
     print(f"Error loading SHAP model: {exc}")
     model = None
+
+try:
+    profit_model = joblib.load(profit_model_path)
+    print("Profit percentage model loaded successfully.")
+except FileNotFoundError:
+    print("Error: Profit percentage model file not found.")
+    profit_model = None
+except Exception as exc:
+    print(f"Error loading profit percentage model: {exc}")
+    profit_model = None
 
 
 # --- 4. Pydantic Models for API I/O ---
@@ -73,6 +90,19 @@ class SurgeFeatures(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_price: float
 
+class ProfitFeatures(BaseModel):
+    Number_of_Riders: float
+    Number_of_Drivers: float
+
+class ProfitPredictionResponse(BaseModel):
+    predicted_profit_percentage: float
+
+class ProfitBatchRequest(BaseModel):
+    rides: list[ProfitFeatures]
+
+class ProfitBatchPredictionResponse(BaseModel):
+    predictions: list[ProfitPredictionResponse]
+
 
 # --- 5. API Endpoints ---
 @app.get("/")
@@ -92,3 +122,22 @@ def predict_price(features: SurgeFeatures):
     return PredictionResponse(
         predicted_price=round(prediction, 2)
     )
+
+@app.post("/predict-profit-percentages", response_model=ProfitBatchPredictionResponse)
+def predict_profit_percentages(payload: ProfitBatchRequest):
+    if profit_model is None:
+        raise HTTPException(status_code=500, detail="Profit model not loaded. Cannot make predictions.")
+
+    if len(payload.rides) == 0:
+        return ProfitBatchPredictionResponse(predictions=[])
+
+    input_rows = [ride.dict() for ride in payload.rides]
+    input_df = pd.DataFrame(input_rows, columns=PROFIT_FEATURE_COLUMNS)
+    raw_predictions = profit_model.predict(input_df)
+
+    predictions = [
+        ProfitPredictionResponse(predicted_profit_percentage=round(float(value), 2))
+        for value in raw_predictions
+    ]
+
+    return ProfitBatchPredictionResponse(predictions=predictions)
